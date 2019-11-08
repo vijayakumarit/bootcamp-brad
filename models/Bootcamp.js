@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
-
+const slugify = require ('slugify')
+const geocoder = require ('../utils/geocoder')
 const BootcampSchema = new mongoose.Schema(
   {
     name: {
@@ -97,6 +98,50 @@ const BootcampSchema = new mongoose.Schema(
       type: Date,
       default: Date.now
     }
+},{
+  toJSON:{virtuals:true},
+  toObject:{virtuals:true}
 });
+
+//GEOCODER create a location
+
+BootcampSchema.pre('save',async function(next){
+  const loc = await geocoder.geocode(this.address);
+  this.location={
+    type:'Point',
+    coordinates:[loc[0].longitude,loc[0].latitude],
+    formattedAddress : loc[0].formattedAddress,
+    street : loc[0].streetName,
+    city : loc[0].city,
+    state : loc[0].stateCode,
+    zipcode : loc[0].zipcode,
+    country : loc[0].countryCode
+  }
+  //Do not save the address
+
+  this.address = undefined;
+  next();
+});
+
+
+//Cascade course deleted when the bootcamp deleted
+
+
+BootcampSchema.pre('remove', async function(next){
+
+  console.log(`Courses beeing deleted from bootcamp ${this._id}`);
+  await this.model('Course').deleteMany({bootcamp:this._id});
+  next();
+});
+
+//Reverse populate virtuals
+
+BootcampSchema.virtual('courses',{
+ref:'Course',
+localField:'_id',
+foreignField :'bootcamp',
+justOne: false
+
+})
 
 module.exports = mongoose.model('Bootcamp', BootcampSchema);

@@ -11,6 +11,7 @@ dotenv.config({path:'./config/config.env'});
 connectdb();
 const bootscamp = require('./routes/bootcamps')
 
+const courses = require('./routes/courses')
 const app = express();
 
  //Body Parser
@@ -24,6 +25,7 @@ if(process.env.NODE_ENV === "development"){
 }
 
 app.use('/api/v1/bootcamps',bootscamp)
+app.use('/api/v1/courses',courses)
 
 app.use(errorHandler)
 

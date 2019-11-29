@@ -6,7 +6,11 @@ const errorHandler = require ('./middleware/error')
 const fileupload = require('express-fileupload')
 const cookieParser = require('cookie-parser')
 const morgan = require('morgan')
+const helmet = require('helmet')
+const xss = require('xss-clean')
+const cors = require('cors')
 const colors = require('colors')
+const mongoSanitize = require('express-mongo-sanitize');
 
 dotenv.config({path:'./config/config.env'});
 
@@ -33,8 +37,25 @@ if(process.env.NODE_ENV === "development"){
 
 app.use(fileupload());
 
+//Sanitize data
+app.use(mongoSanitize());
+
+//Security Headers
+
+app.use(helmet());
+
+//Avoid XSS attacks scripts
+
+app.use(xss());
+
+//Add cors CROS (cross plotform enable)
+
+app.use(cors());
+
+//set static folder
 app.use(express.static(path.join(__dirname, 'public')));
 
+//Mount routes
 app.use('/api/v1/bootcamps',bootscamp)
 app.use('/api/v1/courses',courses)
 app.use('/api/v1/auth',auth)
